@@ -3,12 +3,15 @@
 namespace Rector\CodeQuality\Rector\If_;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
-use PhpParser\NodeVisitor;
+use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeTraverser;
 use PHPStan\Type\ObjectType;
-use Rector\BetterPhpDocParser\Ast\NodeTraverser;
+use PHPStan\Type\Type;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\PhpParser\Node\Manipulator\ClassManipulator;
 use Rector\Rector\AbstractRector;
@@ -117,26 +120,28 @@ CODE_SAMPLE
             return $stmt;
 
             // @todo resolve later
-            $expressions[] = new Node\Stmt\Expression($stmt);
+            $expressions[] = new Expression($stmt);
         }
 
         return $expressions;
     }
 
-    private function resolvePropertyFetchValue(PropertyFetch $propertyFetch): ?\PHPStan\Type\Type
+    private function resolvePropertyFetchValue(PropertyFetch $propertyFetch): ?Type
     {
         /** @var Class_ $class */
         $class = $propertyFetch->getAttribute(AttributeKey::CLASS_NODE);
 
         $propertyName = $this->getName($propertyFetch);
+        if ($propertyName === null) {
+            return null;
+        }
 
-        /** @var Node\Stmt\PropertyProperty $property */
         $propertyProperty = $this->classManipulator->getProperty($class, $propertyName);
         if ($propertyProperty === null) {
             return null;
         }
 
-        /** @var Node\Stmt\Property $property */
+        /** @var Property $property */
         $property = $propertyProperty->getAttribute(AttributeKey::PARENT_NODE);
         // anything but private can be changed from outer scope
         if (! $property->isPrivate()) {
@@ -150,7 +155,10 @@ CODE_SAMPLE
         }
 
         $resolvedType = null;
-        $this->traverseNodesWithCallable($constructClassMethod->stmts, function (Node $node) use ($propertyName, &$resolvedType) {
+        $this->traverseNodesWithCallable((array) $constructClassMethod->stmts, function (Node $node) use (
+            $propertyName,
+            &$resolvedType
+        ): ?int {
             if (! $node instanceof PropertyFetch) {
                 return null;
             }
@@ -160,13 +168,13 @@ CODE_SAMPLE
             }
 
             $parentNode = $node->getAttribute(AttributeKey::PARENT_NODE);
-            if (! $parentNode instanceof Node\Expr\Assign) {
+            if (! $parentNode instanceof Assign) {
                 return null;
             }
 
             $resolvedType = $this->getStaticType($parentNode->expr);
 
-            return \PhpParser\NodeTraverser::STOP_TRAVERSAL;
+            return NodeTraverser::STOP_TRAVERSAL;
         });
 
         return $resolvedType;

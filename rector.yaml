@@ -18,3 +18,5 @@ parameters:
 
 services:
     Rector\CodingStyle\Rector\Namespace_\ImportFullyQualifiedNamesRector: ~
+    Rector\TypeDeclaration\Rector\Closure\AddClosureReturnTypeRector: ~
+    Rector\PHPStan\Rector\Node\RemoveNonExistingVarAnnotationRector: ~
