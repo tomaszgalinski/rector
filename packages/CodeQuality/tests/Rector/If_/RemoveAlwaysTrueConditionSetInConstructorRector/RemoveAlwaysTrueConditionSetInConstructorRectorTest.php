@@ -9,7 +9,10 @@ final class RemoveAlwaysTrueConditionSetInConstructorRectorTest extends Abstract
 {
     public function test(): void
     {
-        $this->doTestFiles([__DIR__ . '/Fixture/fixture.php.inc']);
+        $this->doTestFiles([
+//            __DIR__ . '/Fixture/fixture.php.inc',
+            __DIR__ . '/Fixture/multiple_lines.php.inc',
+        ]);
     }
 
     protected function getRectorClass(): string
