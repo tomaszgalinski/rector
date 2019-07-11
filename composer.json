@@ -1,5 +1,5 @@
 {
-    "name": "rector/rector",
+    "name": "tomaszgalinski/rector",
     "description": "Instant upgrade and refactoring of your PHP code",
     "keywords": ["instant upgrades", "instant refactoring", "ast", "automated refactoring"],
     "homepage": "https://getrector.org",
